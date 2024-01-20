@@ -12,6 +12,7 @@ a maya python plugin to write average normals of a mesh into uvs, by maya.api.Op
     - Store original vertex normals for recovery
     - Average vertex normals
     - Fetch averaged vertex normal at face-vertex level and encode it into UV2 with octahedron compression
+    - Restore to original normals
     - Decode average normals in vertex shader
  
 ## Demo
