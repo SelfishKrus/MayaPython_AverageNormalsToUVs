@@ -13,6 +13,10 @@ a maya python plugin to write average normals of a mesh into uvs, by maya.api.Op
     - Average vertex normals
     - Fetch averaged vertex normal at face-vertex level and encode it into UV2 with octahedron compression
     - Decode average normals in vertex shader
+ 
+## Demo
+
+![Comparison](https://github.com/SelfishKrus/MayaPython_AverageNormalsToUVs/assets/79186991/e595c16b-1218-43ea-a82e-06046cc2cab2)
 
 ## Tips
 
@@ -21,10 +25,6 @@ a maya python plugin to write average normals of a mesh into uvs, by maya.api.Op
 - Before executing [AverageNormalsToUVs.py],
     - Make sure there are 3 UV sets in the model, and UV values are not NULL.
     - Check out UV index order with [PrintUVSets.py] cuz it’s not always in order as UV Editor presents.
-
-## Demo
-
-![Comparison](https://github.com/SelfishKrus/MayaPython_AverageNormalsToUVs/assets/79186991/e595c16b-1218-43ea-a82e-06046cc2cab2)
 
 ## Ref
 
