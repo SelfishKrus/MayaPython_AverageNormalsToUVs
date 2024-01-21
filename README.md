@@ -24,6 +24,7 @@ a maya python plugin to write average normals of a mesh into uvs, by maya.api.Op
 - Create a new dx11shader material and link it to /Shader/DXS_NormalDisplay.
 - Check out Surface Data bound with corresponding semantics in dx11ShaderMaterial
 - Before executing [AverageNormalsToUVs.py],
+    - History clear up in Atrribute Editor
     - Make sure there are 3 UV sets in the model, and UV values are not NULL.
     - Check out UV index order with [PrintUVSets.py] cuz it’s not always in order as UV Editor presents.
 
