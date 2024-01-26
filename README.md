@@ -27,6 +27,7 @@ a maya python plugin to write average normals of a mesh into uvs, by maya.api.Op
     - History clear up in Atrribute Editor
     - Make sure there are 3 UV sets in the model, and UV values are not NULL.
     - Check out UV index order with [PrintUVSets.py] cuz it’s not always in order as UV Editor presents.
+- maya.api.OpenMaya not work on skinned mesh UV(don't know why), so here is a replacement by maya.cmds.
 
 ## Ref
 
