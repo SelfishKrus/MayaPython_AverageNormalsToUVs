@@ -72,6 +72,7 @@ def main():
                 uvIndexToWriteIn = 2
                 uvSetNames = []
                 uvSetNames = fnMesh.getUVSetNames()
+                uvToWriteIn = uvSetNames[uvIndexToWriteIn]
 
                 numVertices = fnMesh.numVertices
 
@@ -80,16 +81,16 @@ def main():
                     print(f"ERROR: only {len(uvSetNames)} uv sets, please add to 3 uv sets.")
                     return
                 
-                if itMeshPolygon.hasUVs(uvSetNames[uvIndexToWriteIn]):
-                    print(f"{uvSetNames[uvIndexToWriteIn]} is valid")
+                if itMeshPolygon.hasUVs(uvToWriteIn):
+                    print(f"{uvToWriteIn} is valid")
                 else:
-                    print(f"ERROR: {uvSetNames[uvIndexToWriteIn]} is invalid")
+                    print(f"ERROR: {uvToWriteIn} is invalid")
                     return
                 
                 print("Check out UV Set Order")
                 for i, uvSetName in enumerate(uvSetNames):
                     print(f"UV[{i}] : {uvSetName}")
-                print(f"Write into UVSET[{uvIndexToWriteIn}] : {uvSetNames[uvIndexToWriteIn]}")
+                print(f"Write into UVSET : {uvToWriteIn}")
                 print("------------------------------------")
 
                 ############ Store original normals ############
@@ -103,6 +104,8 @@ def main():
                 cmds.polyAverageNormal(distance=float_distance)
                 print("Average normals - Finished")
                 print("------------------------------------")
+
+                cmds.polyUVSet( currentUVSet=True,  uvSet=uvToWriteIn)
 
                 ############ Encode to UV ######### ###
                 # get avg vertex normal
@@ -122,7 +125,10 @@ def main():
                     avgNormal_encoded = Encode(avgNormal)
 
                     cmds.select(f'{model}.map[{i}]')
-                    cmds.polyEditUV(u=avgNormal_encoded[0], v=avgNormal_encoded[1], r=False)
+                    cmds.polyEditUV(u=avgNormal_encoded[0], v=avgNormal_encoded[1], r=False, uvs=uvToWriteIn)
+
+                cmds.polyUVSet( currentUVSet=True,  uvSet=uvSetNames[0])
+                
             
                 
                 print("Average normals to UV - Finished")
