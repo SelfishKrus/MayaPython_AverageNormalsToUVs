@@ -131,7 +131,7 @@
         float2 UV2 : TEXCOORD2;
 
         float3 smoothNormalOS : TEXCOORD3;
-        float3 smoothNormalWS : TEXCOORD4;
+        float3 smoothNormalTS : TEXCOORD4;
         float3 normalTS : TEXCOORD5;
 
     };
@@ -182,9 +182,14 @@
     {
         vertexOutput_outline OUT = (vertexOutput_outline)0;
 
-        float3 smoothNormalOS = Decode((IN.UV2.xy));
-        float3 smoothNormalWS = mul(float4(smoothNormalOS, 0.0f), _Matrix_W).xyz;
         float3 normalWS = mul(float4(IN.normalOS, 0.0f), _Matrix_W).xyz;
+
+        // get smooth normal
+        float3 binormalOS = cross(IN.normalOS, IN.tangentOS.xyz) * IN.tangentOS.w;
+        float3x3 matrix_TS2OS = float3x3(IN.tangentOS.xyz, binormalOS, IN.normalOS);
+        float3 smoothNormalTS = Decode((IN.UV2.xy));
+        float3 smoothNormalOS = mul(smoothNormalTS, matrix_TS2OS);
+        float3 smoothNormalWS = mul(float4(smoothNormalOS, 0.0f), _Matrix_W).xyz;
 
         float3 posWS = mul(float4(IN.pos, 1.0f), _Matrix_W).xyz;
         float3 extrudeDirWS = lerp(normalWS, smoothNormalWS, _Extrude_VertexOrUV);
@@ -200,13 +205,13 @@
     {   
         vertexOutput OUT = (vertexOutput)0; // to zero out all members
 
-        float3 smoothNormalOS = Decode((IN.UV2));
+        float3 smoothNormalTS = Decode((IN.UV2));
 
         // tbn
         float3 normalWS = mul(float4(IN.normalOS, 0.0f), _Matrix_W).xyz;
         
         OUT.hpos = mul(float4(IN.pos, 1.0f), _Matrix_WVP);
-        OUT.smoothNormalWS = mul(float4(smoothNormalOS, 0.0f), _Matrix_W).xyz;
+        OUT.smoothNormalTS = mul(float4(smoothNormalTS, 0.0f), _Matrix_W).xyz;
         OUT.normalWS = normalWS;
         
         OUT.UV0 = FlipY(IN.UV0);
@@ -225,7 +230,7 @@
     float4 fragmentShader(vertexOutput IN) : COLOR
     {
         float3 finalColor;
-            finalColor = IN.smoothNormalWS * _Display_VertexOrUV 
+            finalColor = IN.smoothNormalTS * _Display_VertexOrUV 
                 + IN.normalWS * (1.0f - _Display_VertexOrUV);
 
         return float4(finalColor, 1.0f);

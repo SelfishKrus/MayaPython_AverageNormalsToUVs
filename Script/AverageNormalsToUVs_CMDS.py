@@ -109,23 +109,10 @@ def main():
 
                 ############ Encode to UV ######### ###
                 # get avg vertex normal
-                for i in range(numVertices):
-                    cmds.select(clear=True)
-                    cmds.select(f'{model}.vtx[{i}]')
-                    avgNormals = cmds.polyNormalPerVertex(q=True, xyz=True)
-                    avgNormal = np.array([0.0, 0.0, 0.0])
-                    for j in range(len(avgNormals)//3):
-                        avgNormal += avgNormals[j*3:j*3+3]
-                    
-                    mag = np.linalg.norm(avgNormal)
-                    avgNormal /= mag
-                    
-                    # encode
-                    avgNormal = om.MFloatVector(avgNormal[0], avgNormal[1], avgNormal[2])
-                    avgNormal_encoded = Encode(avgNormal)
-
-                    cmds.select(f'{model}.map[{i}]')
-                    cmds.polyEditUV(u=avgNormal_encoded[0], v=avgNormal_encoded[1], r=False, uvs=uvToWriteIn)
+                avgNormals = om.MFloatVectorArray()
+                avgNormals.setLength(numVertices)
+                avgNormals = fnMesh.getVertexNormals(angleWeighted=True, space=om.MSpace.kObject)
+                print(f"len(avgNormals): {len(avgNormals)}")
 
                 cmds.polyUVSet( currentUVSet=True,  uvSet=uvSetNames[0])
                 
