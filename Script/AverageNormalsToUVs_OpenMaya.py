@@ -47,7 +47,7 @@ def main():
         float_distance = float(str_distance)
         
         # a list contains full DAG
-        selectModels = cmds.ls(sl=True, l=False)
+        selectModels = cmds.ls(sl=True)
         selectList = om.MGlobal.getActiveSelectionList()
         
         if len(selectModels) == 0:
@@ -71,6 +71,8 @@ def main():
                 uvIndexToWriteIn = 2
                 uvSetNames = []
                 uvSetNames = fnMesh.getUVSetNames()
+
+                encodedNormals = [] * fnMesh.numFaceVertices
 
                 ############ Check out UV Set ############
                 if len(uvSetNames) < 3:
@@ -101,7 +103,7 @@ def main():
                 print("Average normals - Finished")
                 print("------------------------------------")
 
-                ############ Encode to UV ############
+                ############ Encode and store ############
                 setUVLoopCount = 0
                 matrixId = 0
                 while (not itMeshPolygon.isDone()):
@@ -124,16 +126,14 @@ def main():
                         DebugPrint("avgNormalOS_decoded", avgNormalOS_decoded, setUVLoopCount)
 
                         # Set uv
-                        # itMeshPolygon.setUV(i, avgNormalOS_encoded, uvSet=uvSetNames[uvIndexToWriteIn])
-                        cmds.select(f'{model}.f[{globalFaceId}].map[{i}]')
-                        cmds.polyEditUV(uvSetName=uvSetNames[uvIndexToWriteIn], u=avgNormalOS_encoded[0], v=avgNormalOS_encoded[1], relative=False)
+                        itMeshPolygon.setUV(i, avgNormalOS_encoded, uvSet=uvSetNames[uvIndexToWriteIn])
                         
                         DebugPrint("*", "*", setUVLoopCount)
                         matrixId += 1
                         setUVLoopCount += 1
 
                     itMeshPolygon.next()
-                
+
                 print(f"Set UV Loop Count: {setUVLoopCount}")
                 print("Average normals to UV - Finished")
                 print("------------------------------------")
@@ -146,6 +146,10 @@ def main():
 
                 print(f"{model}: Done")
                 print("#############################################")
+
+                outputPath = r'G:\GithubProjects\MayaPython_AverageNormalsToUVs\ProjectTest\output.fbx'
+                cmds.file(outputPath, force=True, options="v=0;", typ="FBX export", pr=True, es=True)
+
 
 if __name__ == "__main__":
     main()
