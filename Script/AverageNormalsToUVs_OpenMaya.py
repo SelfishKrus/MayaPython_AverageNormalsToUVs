@@ -32,7 +32,6 @@ def Decode(f):
     return n / np.linalg.norm(n)  # normalize
 
 def main():
-
     # Get distance threshold
     result = cmds.promptDialog(
                     title = "Average Normals",
@@ -48,7 +47,7 @@ def main():
         float_distance = float(str_distance)
         
         # a list contains full DAG
-        selectModels = cmds.ls(sl=True, l=True)
+        selectModels = cmds.ls(sl=True, l=False)
         selectList = om.MGlobal.getActiveSelectionList()
         
         if len(selectModels) == 0:
@@ -109,7 +108,7 @@ def main():
                     
                     # get average normal
                     globalFaceId = itMeshPolygon.index()
-                    # eace vertex in face
+                    # each vertex in face
                     for i in range(itMeshPolygon.polygonVertexCount()):
                         globalVertexId = itMeshPolygon.vertexIndex(i)
                         avgNormalOS = om.MVector()
@@ -125,7 +124,9 @@ def main():
                         DebugPrint("avgNormalOS_decoded", avgNormalOS_decoded, setUVLoopCount)
 
                         # Set uv
-                        itMeshPolygon.setUV(i, avgNormalOS_encoded, uvSet=uvSetNames[uvIndexToWriteIn])
+                        # itMeshPolygon.setUV(i, avgNormalOS_encoded, uvSet=uvSetNames[uvIndexToWriteIn])
+                        cmds.select(f'{model}.f[{globalFaceId}].map[{i}]')
+                        cmds.polyEditUV(uvSetName=uvSetNames[uvIndexToWriteIn], u=avgNormalOS_encoded[0], v=avgNormalOS_encoded[1], relative=False)
                         
                         DebugPrint("*", "*", setUVLoopCount)
                         matrixId += 1
