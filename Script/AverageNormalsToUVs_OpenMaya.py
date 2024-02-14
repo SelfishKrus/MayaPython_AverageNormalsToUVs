@@ -2,6 +2,8 @@ import maya.cmds as cmds
 import maya.api.OpenMaya as om
 import numpy as np
 
+import os
+
 # Functions
 def DebugPrint(header, message, index, num=5):
     if index < num:
@@ -92,10 +94,41 @@ def main():
                 print("------------------------------------")
 
                 ############ Store original normals ############
-                originalNormals = om.MFloatVectorArray()    
+                originalNormals = om.MVectorArray()    
                 originalNormals = fnMesh.getNormals()
                 print("Store orignal normals - Finished")
                 print("------------------------------------")
+
+                ############ Get TBN Matrix ############
+                matrice_OStoTS = om.MMatrixArray()
+                matrice_OStoTS.setLength(fnMesh.numFaceVertices)
+
+                faceVertexCount = 0
+
+                itMeshPolygon.reset()
+                while (not itMeshPolygon.isDone()):
+                    globalFaceId = itMeshPolygon.index()
+                    for i in range(itMeshPolygon.polygonVertexCount()):
+                        globalVertexId = itMeshPolygon.vertexIndex(i)
+                        normalOS = om.MVector()
+                        tangetnOS = om.MVector()
+                        binormalOS = om.MVector()
+                        normalOS = fnMesh.getFaceVertexNormal(globalFaceId, globalVertexId, space=om.MSpace.kObject)
+                        tangentOS = fnMesh.getFaceVertexTangent(globalFaceId, globalVertexId, space=om.MSpace.kObject)
+                        binormalOS = fnMesh.getFaceVertexBinormal(globalFaceId, globalVertexId, space=om.MSpace.kObject)
+                        matrix_TStoOS = om.MMatrix([tangentOS.x,    tangentOS.y,    tangentOS.z,    0.0,
+                                                    binormalOS.x,   binormalOS.y,   binormalOS.z,   0.0,
+                                                    normalOS.x,     normalOS.y,     normalOS.z,     0.0,
+                                                    0.0,            0.0,            0.0,            1.0])
+                        matrix_OStoTS = matrix_TStoOS.transpose()
+                        matrice_OStoTS[faceVertexCount] = matrix_OStoTS
+
+                        faceVertexCount += 1
+                    
+                    itMeshPolygon.next()
+
+                # --- test --- 
+                print(f"len(matrice_OStoTS): {len(matrice_OStoTS)}")
 
                 ############ Average normals ############
                 cmds.select(model)
@@ -106,6 +139,7 @@ def main():
                 ############ Encode and store ############
                 setUVLoopCount = 0
                 matrixId = 0
+                itMeshPolygon.reset()
                 while (not itMeshPolygon.isDone()):
                     
                     # get average normal
@@ -115,18 +149,16 @@ def main():
                         globalVertexId = itMeshPolygon.vertexIndex(i)
                         avgNormalOS = om.MVector()
                         avgNormalOS = fnMesh.getFaceVertexNormal(globalFaceId, globalVertexId, space=om.MSpace.kObject)
-                        DebugPrint("avgNormalWS", avgNormalOS, setUVLoopCount)
+                        avgNormalTS = om.MVector()
+                        avgNormalTS = avgNormalOS * matrice_OStoTS[matrixId]
+                        DebugPrint("avgNormalTS", avgNormalTS, setUVLoopCount)
                     
                         # octahedron compression
-                        avgNormalOS_encoded = Encode(avgNormalOS)
-                        DebugPrint("avgNormalOS_encoded", avgNormalOS_encoded, setUVLoopCount)
-
-                        # test decode
-                        avgNormalOS_decoded = Decode(avgNormalOS_encoded)
-                        DebugPrint("avgNormalOS_decoded", avgNormalOS_decoded, setUVLoopCount)
+                        avgNormalTS_encoded = Encode(avgNormalTS)
+                        DebugPrint("avgNormalOS_encoded", avgNormalTS_encoded, setUVLoopCount)
 
                         # Set uv
-                        itMeshPolygon.setUV(i, avgNormalOS_encoded, uvSet=uvSetNames[uvIndexToWriteIn])
+                        itMeshPolygon.setUV(i, avgNormalTS_encoded, uvSet=uvSetNames[uvIndexToWriteIn])
                         
                         DebugPrint("*", "*", setUVLoopCount)
                         matrixId += 1
@@ -147,9 +179,21 @@ def main():
                 print(f"{model}: Done")
                 print("#############################################")
 
-                outputPath = r'G:\GithubProjects\MayaPython_AverageNormalsToUVs\ProjectTest\output.fbx'
-                cmds.file(outputPath, force=True, options="v=0;", typ="FBX export", pr=True, es=True)
+            outputPath = r'G:\GithubProjects\MayaPython_AverageNormalsToUVs\ProjectTest'
+            outputName = r'TestCube.fbx'
+            outputPath = os.path.join(outputPath, outputName)
 
+            cmds.select(selectModels)
+            cmds.file(outputPath, force=True, options="v=0;embedTextures=0;", typ="FBX export", pr=True, es=True)
+
+            print(f"{model}: Exported to {outputPath}")
+            print("#############################################")
+
+            cmds.delete(selectModels)
+            cmds.file(outputPath, i=True, options="v=0;mo=0;ImportMaterials=DoNotImportMaterials;")
+
+            print(f"{model}: Imported from {outputPath}")
+            print("#############################################")
 
 if __name__ == "__main__":
     main()
