@@ -148,8 +148,20 @@
 	    string UIName = "";
         int mipmaplevels = 0;
     >;
+
+    bool _EnableUV2Check
+    <
+        string UIName = "";
+        string UIGroup = "Diffuse";
+    >;
     
     // MISC //
+
+    bool _EnableTangentSpaceOutline
+    <
+        string UIGroup = "Outline";
+        string UIName = "";
+    > = false;
 
     float _OutlineWidth
     <   
@@ -163,11 +175,7 @@
         string UIWidget = "Color";
     >;
 
-    bool _EnableUV2Check
-    <
-        string UIName = "";
-        string UIGroup = "Diffuse";
-    >;
+
 
     /////////////////////////////////////////////////////////////////////////////
     ////                               Struct                                ////
@@ -238,8 +246,13 @@
     vertexOutput_outline vertexShader_outline(appdata_outline IN)
     {
         vertexOutput_outline OUT = (vertexOutput_outline)0;
+        
+        // TBN matrix
+        float3 bitangent = cross(IN.normalOS, IN.tangentOS.xyz) * IN.tangentOS.w;
+        float3x3 matrix_TStoOS = float3x3(IN.tangentOS.xyz, bitangent, IN.normalOS);
 
-        float3 smoothNormalOS = Decode(IN.UV2);
+        float3 decodedNormal = Decode(IN.UV2);
+        float3 smoothNormalOS = mul(decodedNormal, matrix_TStoOS) * _EnableTangentSpaceOutline + decodedNormal * (1-_EnableTangentSpaceOutline);
         float3 posOS = IN.pos.xyz;
 
         posOS += smoothNormalOS * _OutlineWidth;
